@@ -50,7 +50,43 @@ class StorageService with ChangeNotifier {
 
 /*
   DELETE IMAGE
+
+  - images are stored as download URLs.
+    eg: https://firebasestorage.googleapis.com/v0/b/fir-masterclass...../uploaded_images/image_name.png
+
+  - in order to delete, we need to know only the path of this image store in firebase
+    ie: uploaded_images/image_name.png
 */
+
+  Future<void> deleteImages(String imageUrl) async {
+    try {
+      // remove from local list
+      _imageUrls.remove(imageUrl);
+
+      // get path name and delete from firebase
+      final String path = extractPathFromUrl(imageUrl);
+      await firebaseStorage.ref(path).delete();
+    }
+
+    //hundle errors
+    catch (e){
+      print("Error detecting image: $e");
+    }
+
+    //notify UI
+    notifyListeners();
+  }
+
+  String extractPathFromUrl(String url) {
+    Uri uri = Uri.parse(url);
+
+    // extracting the part of the url we need
+    String encodedPath = uri.pathSegments.last;
+
+    // url decoding the path
+    return Uri.decodeComponent(encodedPath);
+  }
+
 
 
 }
