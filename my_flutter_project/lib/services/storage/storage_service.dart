@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_for_web/image_picker_for_web.dart';
+
 
 class StorageService with ChangeNotifier {
 
@@ -26,7 +30,7 @@ class StorageService with ChangeNotifier {
 /*
   READ IMAGES
 */
-  Future<void> fetchImages() async {
+  /*Future<void> fetchImages() async {
     // start loading..
     _isLoading = true;
 
@@ -45,7 +49,28 @@ class StorageService with ChangeNotifier {
     // update UI
     notifyListeners();
   }
+*/
 
+  Future<void> fetchImages() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final ListResult result = await firebaseStorage.ref('uploaded_images/').listAll();
+
+      if (result.items.isNotEmpty) {
+        final urls = await Future.wait(result.items.map((ref) => ref.getDownloadURL()));
+        _imageUrls = urls;
+      } else {
+        _imageUrls.clear(); // No images found
+      }
+    } catch (e) {
+      print("Error fetching images: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
 
 /*
@@ -77,7 +102,7 @@ class StorageService with ChangeNotifier {
     notifyListeners();
   }
 
-  String extractPathFromUrl(String url) {
+  /*String extractPathFromUrl(String url) {
     Uri uri = Uri.parse(url);
 
     // extracting the part of the url we need
@@ -86,7 +111,59 @@ class StorageService with ChangeNotifier {
     // url decoding the path
     return Uri.decodeComponent(encodedPath);
   }
+*/
+  String extractPathFromUrl(String url) {
+    Uri uri = Uri.parse(url);
 
+    // Extract the full path after "/o/"
+    String path = uri.path.split('/o/').last.split('?').first;
+
+    return Uri.decodeComponent(path);
+  }
+
+
+  Future<void> uploadImage() async {
+    _isUploading = true;
+    notifyListeners();
+
+    final ImagePicker picker = ImagePicker();
+
+    XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) {
+      _isUploading = false;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      String filePath = 'uploaded_images/${DateTime.now().millisecondsSinceEpoch}.png';
+      print("Uploading file to: $filePath");
+
+      if (kIsWeb) {
+        // Read bytes for web upload
+        final bytes = await image.readAsBytes();
+        final metadata = SettableMetadata(contentType: 'image/png');
+        await firebaseStorage.ref(filePath).putData(bytes, metadata);
+      } else {
+        // Mobile file upload
+        File file = File(image.path);
+        await firebaseStorage.ref(filePath).putFile(file);
+      }
+
+      // Fetch download URL
+      String downloadURL = await firebaseStorage.ref(filePath).getDownloadURL();
+      _imageUrls.add(downloadURL);
+      notifyListeners();
+
+      print("Image uploaded successfully: $downloadURL");
+    } catch (e) {
+      print("Error uploading image: $e");
+    } finally {
+      _isUploading = false;
+      notifyListeners();
+    }
+  }
 
 
 }

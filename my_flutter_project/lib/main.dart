@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:my_flutter_project/services/storage/storage_service.dart';
+import 'package:provider/provider.dart';
 import 'pages/home_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -9,7 +11,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(
+      ChangeNotifierProvider(
+          create: (context) => StorageService(),
+          child: const MyApp(),
+      ),
+  );
 }
 
 class MyApp extends StatelessWidget {
