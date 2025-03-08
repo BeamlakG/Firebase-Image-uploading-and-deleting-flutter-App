@@ -58,28 +58,32 @@ class _HomePageState extends State<HomePage> {
 
               return Card(
                 margin: const EdgeInsets.all(8),
-                child: Stack(
-                  children: [
-                    // Display image
-                    Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Center(
-                          child: Icon(Icons.error, color: Colors.red),
-                        );
-                      },
-                    ),
-                    // Delete button
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => storageService.deleteImages(imageUrl),
+                child: SizedBox(
+                  height: 200,
+                  width: double.infinity,
+                  child: Stack(
+                    children: [
+                      // Display image
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.error, color: Colors.red),
+                          );
+                        },
                       ),
-                    ),
-                  ],
+                      // Delete button
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => storageService.deleteImages(imageUrl),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -89,60 +93,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-/*
-import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:my_flutter_project/services/storage/storage_service.dart';
-import 'package:provider/provider.dart';
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-
-  @override
-  void initState() {
-    super.initState();
-
-    fetchImages();
-  }
-
-  //fetchImages
-  Future<void> fetchImages() async{
-    await Provider.of<StorageService>(context, listen: false).fetchImages();
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<StorageService>(
-        builder: (context, storageService, child){
-          final List<String> imageUrls = storageService.imageUrls;
-          return Scaffold(
-            floatingActionButton: FloatingActionButton(
-                onPressed: () => storageService.uploadImage(),
-              child: const Icon(Icons.add),
-            ),
-
-            body: ListView.builder(
-              itemCount: imageUrls.length,
-                itemBuilder: (context, index){
-
-                  final String imageUrl = imageUrls[index];
-
-                  return Image.network(imageUrl);
-                }
-
-            ),
-
-          );
-        },
-    );
-  }
-}
-*/
